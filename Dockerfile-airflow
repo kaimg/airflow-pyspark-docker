@@ -1,0 +1,29 @@
+# Extend the official Airflow image
+FROM apache/airflow:3.0.0
+
+# Install OpenJDK 17 and the required tools (procps for the 'ps' command)
+USER root
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    openjdk-17-jdk \
+    ca-certificates-java \
+    procps \
+    wget && \
+    apt-get clean
+
+# Set JAVA_HOME and update PATH
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+ENV PATH=$JAVA_HOME/bin:$PATH
+
+# Install Spark (adjust the version as needed)
+RUN wget -qO - https://archive.apache.org/dist/spark/spark-3.5.1/spark-3.5.1-bin-hadoop3.tgz | tar xvz -C /opt && \
+    ln -s /opt/spark-3.5.1-bin-hadoop3 /opt/spark
+
+# Switch to airflow user before installing pip packages
+USER airflow
+
+# Install PySpark
+RUN pip install pyspark apache-airflow-providers-apache-spark
+
+# Switch back to airflow user
+USER airflow
