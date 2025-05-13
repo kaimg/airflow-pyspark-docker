@@ -1,13 +1,8 @@
 import requests
 import polars as pl
-from dotenv import load_dotenv
-import os
+from config.config import API_KEY_CURRENCY_RATE
 
-load_dotenv()
-
-api_key = os.getenv("API_KEY_CURRENCY_RATE")
-
-API_URL = f"http://api.exchangeratesapi.io/v1/latest?access_key={api_key}"
+API_URL = f"http://api.exchangeratesapi.io/v1/latest?access_key={API_KEY_CURRENCY_RATE}"
 def get_currency_rate(currency_code: str) -> float:
     response = requests.get(f"{API_URL}&{currency_code}&symbols=USD,AUD,CAD,PLN,MXN")
     data = response.json()
