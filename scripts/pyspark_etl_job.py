@@ -1,5 +1,6 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
+from config.config import DB_CONFIG
 
 # Set up Spark session
 spark = SparkSession.builder \
@@ -8,13 +9,13 @@ spark = SparkSession.builder \
     .getOrCreate()
 
 # JDBC URLs for Neon.tech
-jdbc_url = "jdbc:postgresql://ep-flat-frost-a2at8amr-pooler.eu-central-1.aws.neon.tech/pipeline-test?sslmode=require"
+jdbc_url = DB_CONFIG["jdbc_url"]
 
 # Properties
 properties = {
-    "user": "pipeline-test_owner",
-    "password": "npg_Bwhe5v1KHlng",
-    "driver": "org.postgresql.Driver"
+    "user": DB_CONFIG["user"],
+    "password": DB_CONFIG["password"],
+    "driver": DB_CONFIG["driver"]
 }
 
 # Read from source table (e.g., "sales")
