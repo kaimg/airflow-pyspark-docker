@@ -4,7 +4,7 @@ from config.config import DB_CONFIG
 
 spark = SparkSession.builder \
     .appName("ETL - Contract Data") \
-    .config("spark.jars", "/opt/airflow/postgresql-42.2.5.jar") \
+    .config("spark.jars", DB_CONFIG["driver_path"]) \
     .getOrCreate()
 
 jdbc_url = DB_CONFIG["jdbc_url"]
