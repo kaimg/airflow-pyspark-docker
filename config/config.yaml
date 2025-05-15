@@ -1,0 +1,14 @@
+contracts_pipeline:
+  source_table: public.contract_service_contracts
+  target_table: contract_dashboard_contract_info
+  columns:
+    - id
+    - external_id
+    - description
+    - customer_id
+    - supplier_id
+    - cam_id
+    - procurement_contract_owner
+    - valid_from
+    - valid_to
+    - contract_approved_value

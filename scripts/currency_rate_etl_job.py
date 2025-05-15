@@ -1,5 +1,5 @@
 import requests
-import polars as pl
+import polars as pl # type: ignore
 from config.config import API_KEY_CURRENCY_RATE
 from pathlib import Path
 

@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
-from airflow import DAG
-from airflow.operators.python import PythonOperator
-from airflow.operators.empty import EmptyOperator
+from airflow import DAG  # type: ignore
+from airflow.operators.python import PythonOperator  # type: ignore
+from airflow.operators.empty import EmptyOperator  # type: ignore
 from scripts.pyspark_etl_job import run_pipeline
 
 default_args = {
@@ -14,7 +14,7 @@ with DAG(
     dag_id='pyspark_world_dag_python_operator',
     default_args=default_args,
     description='Run PySpark ETL job using PythonOperator',
-    start_date=datetime(2023, 1, 1),
+    start_date=datetime(2025, 1, 1),
     catchup=False,
     tags=['pyspark'],
 ) as dag:

@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
-from airflow import DAG
-from airflow.operators.bash import BashOperator
-from airflow.operators.empty import EmptyOperator
+from airflow import DAG # type: ignore 
+from airflow.operators.bash import BashOperator # type: ignore
+from airflow.operators.empty import EmptyOperator # type: ignore
 
 default_args = {
     'owner': 'airflow',

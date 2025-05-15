@@ -1,12 +1,11 @@
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import col
+from pyspark.sql import SparkSession # type: ignore
+from pyspark.sql.functions import col # type: ignore
 from config.config import DB_CONFIG
 
 def get_spark_session(app_name="ETL with Advanced Transformations"):
-    return SparkSession.builder \
-        .appName(app_name) \
-        .config("spark.jars", "/opt/airflow/postgresql-42.2.5.jar") \
-        .getOrCreate()
+    spark_configs = "spark.jars"
+
+    return SparkSession.builder.appName(app_name).config(spark_configs, DB_CONFIG["driver_path"]).getOrCreate()
 
 
 def extract(spark, source_table):
