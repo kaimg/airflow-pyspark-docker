@@ -1,9 +1,7 @@
 import requests
-from pathlib import Path
-from config.config import API_KEY_CURRENCY_RATE, DB_CONFIG
 from pyspark.sql import SparkSession # type: ignore
-from pyspark.sql.types import StructType, StructField, StringType, DoubleType, DateType # type: ignore
-
+from pyspark.sql.types import StructType, StructField, StringType, DoubleType # type: ignore
+from config.config import API_KEY_CURRENCY_RATE, DB_CONFIG
 
 API_URL = f"http://api.exchangeratesapi.io/v1/"
 TARGET_CURRENCIES = ["USD", "AUD", "CAD", "PLN", "MXN", "AZN", "TRY"]

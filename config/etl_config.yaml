@@ -1,5 +1,5 @@
 contracts_pipeline:
-  source_table: public.contract_service_contracts
+  source_table: public.contracts_contract
   target_table: contract_dashboard_contract_info
   columns:
     - id
@@ -12,3 +12,123 @@ contracts_pipeline:
     - valid_from
     - valid_to
     - contract_approved_value
+
+requests_pipeline:
+  source_table:
+  target_table:
+  columns:
+    - id
+    - status
+    - request_to
+    - pricebook_id
+    - created_by
+    - receiver_id
+    - created_at
+    - updated_at
+
+historical_demand_pipeline:
+  source_table: public.contract_service_pricebook_product_demand
+  target_table: contract_dashboard_historical_demand_for_pricebook_products
+  columns:
+    - contract_product_id
+    - last_year_demand
+    - average_demand
+
+pricebook_info_pipeline:
+  source_table: public.contract_service_pricebooks_and_products
+  target_table: contract_dashboard_pricebook_and_pricebook_product_info
+  columns:
+    - id
+    - pricebook_id
+    - pricebook_description
+    - pricebook_currency
+    - contract_id
+    - pricebook_customer_reference_number
+    - supplier_uom
+    - supplier_description
+    - customer_short_description
+    - customer_long_description
+    - supplier_part_no
+    - unit_price
+    - price_valid_from
+    - price_valid_to
+    - sla_lead_time
+    - incoterm_key
+    - minimum_order_quantity
+    - maximum_order_quantity
+    - export_control_status
+    - export_declaration_cost
+    - certificate_cost
+    - packaging_cost
+    - status
+    - is_new
+    - cam_approved
+    - disable_reason
+    - updated_at
+    - product_id
+    - is_new_for_contract_owner
+    - customer_unique_id
+    - last_download_date
+    - manufacturer_name
+    - manufacturer_part_no
+    - manufacturer_description
+
+request_info_pipeline:
+  source_table: public.contract_service_requests
+  target_table: contract_dashboard_request_info
+  columns:
+    - id
+    - status
+    - request_to
+    - pricebook_id
+    - sender_id
+    - receiver_id
+    - created_at
+    - updated_at
+    - parent_request_id
+
+request_product_info_pipeline:
+  source_table: public.contract_service_request_products
+  target_table: contract_dashboard_request_product_info
+  columns:
+    - request_product_id
+    - pricebook_product_id
+    - request_id
+    - status
+    - status_customer
+
+user_info_pipeline:
+  source_table: public.contract_service_users
+  target_table: contract_dashboard_user_info
+  columns:
+    - id
+    - first_name
+    - last_name
+    - company_id
+    - company_name
+    - user_type
+
+currency_rate_pipeline:
+  source_table: public.contract_service_currency_rates
+  target_table: currency_rate
+  columns:
+    - currency_name
+    - rate
+
+negotiation_history_pipeline:
+  source_table: public.contract_service_negotiation_history
+  target_table: contract_dashboard_negotiation_history_combined
+  columns:
+    - product_id
+    - request_id
+    - unit_price
+    - status
+    - history_date
+    - history_user_id
+    - history_id
+    - history_type
+    - is_new
+    - is_new_for_contract_owner
+    - cam_approved
+    - source
+    - status_label
