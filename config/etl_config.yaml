@@ -26,6 +26,24 @@ requests_pipeline:
     - created_at
     - updated_at
 
+request_products_pipeline:
+  source_table:
+  target_table:
+  columns:
+    - id
+    - pricebook_product_id
+    - request_id
+    - status
+
+pricebook_product_pipeline:
+  source_table: public.pricebooks_pricebookproduct
+  target_table: contract_dashboard_pricebook_and_pricebook_product_info
+  join_tables:
+    - pricebooks_pricebookvalues
+    - pb_required_field
+    - pricebooks_pricebook
+  filter_column: pricebooks_pricebookvalues.updated_at
+
 historical_demand_pipeline:
   source_table: public.contract_service_pricebook_product_demand
   target_table: contract_dashboard_historical_demand_for_pricebook_products
