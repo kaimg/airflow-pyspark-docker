@@ -36,7 +36,23 @@ request_products_pipeline:
     - status
 
 pricebook_product_pipeline:
-  source_table: public.pricebooks_pricebookproduct
+  source_tables:
+  - name: pricebooks_pricebookproduct
+    alias: pricebooks_pricebookproduct
+    view_name: ppp
+
+  - name: pricebooks_pricebookvalues
+    alias: pricebooks_pricebookvalues
+    view_name: pbv
+
+  - name: pb_required_field
+    alias: pb_required_field
+    view_name: prf
+
+  - name: pricebooks_pricebook
+    alias: pricebooks_pricebook
+    view_name: pb
+      
   target_table: contract_dashboard_pricebook_and_pricebook_product_info
   join_tables:
     - pricebooks_pricebookvalues
