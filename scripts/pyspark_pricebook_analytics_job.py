@@ -152,7 +152,7 @@ def run_pricebook_analytics_pipeline(**kwargs):
     # Define your target table for the analytics output
     # This might be different from your existing contract_dashboard_contract_info
     target_table = kwargs.get("target_table", pipeline_config["target_table"])
-    write_mode = kwargs.get("write_mode", "overwrite") # Or 'append' for incremental
+    write_mode = kwargs.get("write_mode", pipeline_config["write_mode"]) # Or 'append' for incremental
 
     spark = get_spark_session()
     try:

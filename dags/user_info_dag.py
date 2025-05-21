@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
-from airflow import DAG  # type: ignore
-from airflow.operators.python import PythonOperator  # type: ignore
-from airflow.operators.empty import EmptyOperator  # type: ignore
-from scripts.pyspark_etl_job import run_pipeline
+from airflow import DAG # type: ignore
+from airflow.operators.python import PythonOperator # type: ignore
+from airflow.operators.empty import EmptyOperator # type: ignore
+from scripts.pyspark_user_info_job import run_user_info_pipeline
 
 default_args = {
     'owner': 'airflow',
@@ -11,20 +11,20 @@ default_args = {
 }
 
 with DAG(
-    dag_id='pyspark_world_dag_python_operator',
+    dag_id='user_info_pipeline_dag',
     default_args=default_args,
-    description='Run PySpark ETL job using PythonOperator',
+    description='Run PySpark ETL job for user info dashboard',
     start_date=datetime(2025, 1, 1),
     catchup=False,
-    tags=['pyspark'],
+    tags=['pyspark', 'user_info'],
 ) as dag:
 
     start = EmptyOperator(task_id='start')
     end = EmptyOperator(task_id='end')
 
     run_spark_job = PythonOperator(
-        task_id='run_pyspark_etl',
-        python_callable=run_pipeline,
+        task_id='run_user_info_etl',
+        python_callable=run_user_info_pipeline,
         op_kwargs={},
     )
 

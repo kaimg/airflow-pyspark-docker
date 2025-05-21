@@ -48,7 +48,7 @@ def run_requests_pipeline(**kwargs):
 
     source_table = kwargs.get("source_table", pipeline_config["source_table"])
     target_table = kwargs.get("target_table", pipeline_config["target_table"])
-    write_mode = kwargs.get("write_mode", "overwrite")
+    write_mode = kwargs.get("write_mode", pipeline_config["write_mode"])
     columns = pipeline_config["columns"]
 
     spark = get_spark_session()

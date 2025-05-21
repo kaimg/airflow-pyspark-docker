@@ -60,6 +60,27 @@ pricebook_product_pipeline:
     - pricebooks_pricebook
   filter_column: pricebooks_pricebookvalues.updated_at
 
+user_info_pipeline:
+  source_tables:
+    - name: users_user
+      alias: users_user
+      view_name: u
+
+    - name: companies_customercompany
+      alias: companies_customercompany
+      view_name: c
+
+    - name: users_user_roles
+      alias: users_user_roles
+      view_name: ur
+
+    - name: roles_role
+      alias: roles_role
+      view_name: r
+
+  target_table: contract_dashboard_user_info
+  write_mode: overwrite
+
 historical_demand_pipeline:
   source_table: public.contract_service_pricebook_product_demand
   target_table: contract_dashboard_historical_demand_for_pricebook_products

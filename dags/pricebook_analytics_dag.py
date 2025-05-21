@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from airflow import DAG  # type: ignore
 from airflow.operators.python import PythonOperator  # type: ignore
 from airflow.operators.empty import EmptyOperator  # type: ignore
-from scripts.pyspark_pricebook_analytics_job import run_pipeline
+from scripts.pyspark_pricebook_analytics_job import run_pricebook_analytics_pipeline
 
 default_args = {
     'owner': 'airflow',
@@ -11,7 +11,7 @@ default_args = {
 }
 
 with DAG(
-    dag_id='pyspark_world_dag_python_operator',
+    dag_id='pricebook_analytics_dag_python_operator',
     default_args=default_args,
     description='Run PySpark ETL job using PythonOperator',
     start_date=datetime(2025, 1, 1),
@@ -23,13 +23,9 @@ with DAG(
     end = EmptyOperator(task_id='end')
 
     run_spark_job = PythonOperator(
-        task_id='run_pyspark_etl',
-        python_callable=run_pipeline,
-        op_kwargs={
-            "source_table": "sales",
-            "target_table": "sales_transformed",
-            "write_mode": "overwrite"
-        },
+        task_id='run_pricebook_analytics_etl',
+        python_callable=run_pricebook_analytics_pipeline,
+        op_kwargs={},
     )
 
     (
