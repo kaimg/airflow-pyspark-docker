@@ -1,5 +1,4 @@
 from pyspark.sql import SparkSession # type: ignore
-from datetime import datetime, timedelta
 from config.config import DB_CONFIG, ETL_CONFIG
 
 
