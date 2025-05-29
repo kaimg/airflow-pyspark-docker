@@ -1,23 +1,15 @@
-from pyspark.sql import SparkSession # type: ignore
-from pyspark.sql.functions import col # type: ignore
-from config.config import DB_CONFIG
+from pyspark.sql import SparkSession, DataFrame  # type: ignore
+from pyspark.sql.functions import col  # type: ignore
+from airflow.providers.postgres.hooks.postgres import PostgresHook  # type: ignore
 
-def get_spark_session(app_name="ETL with Advanced Transformations"):
-    spark_configs = "spark.jars"
-
-    return SparkSession.builder.appName(app_name).config(spark_configs, DB_CONFIG["driver_path"]).getOrCreate()
+from scripts.spark_utils import create_spark_session, extract_from_jdbc, load_to_jdbc
 
 
-def extract(spark, source_table):
-    jdbc_url = DB_CONFIG["jdbc_url"]
-    properties = {
-        "user": DB_CONFIG["user"],
-        "password": DB_CONFIG["password"],
-        "driver": DB_CONFIG["driver"]
-    }
-    print(f"[Extract] Reading from {source_table}")
-    df = spark.read.jdbc(jdbc_url, source_table, properties=properties)
-    print(f"[Extract] Retrieved {df.count()} records")
+def extract(spark: SparkSession, source_table: str, jdbc_url: str, db_properties: dict):
+    print(
+        f"[ETL Job - Extract] Reading from {source_table} via Spark Utils using provided JDBC config"
+    )
+    df = extract_from_jdbc(spark, jdbc_url, source_table, db_properties)
     return df
 
 
@@ -28,21 +20,17 @@ def transform(df):
     return transformed_df
 
 
-def load(df, target_table, mode="overwrite"):
-    jdbc_url = DB_CONFIG["jdbc_url"]
-    properties = {
-        "user": DB_CONFIG["user"],
-        "password": DB_CONFIG["password"],
-        "driver": DB_CONFIG["driver"]
-    }
-    print(f"[Load] Writing to {target_table} ({mode} mode)")
-    df.write.jdbc(
-        jdbc_url,
-        target_table,
-        mode=mode,
-        properties=properties
+def load(
+    df: DataFrame,
+    target_table: str,
+    mode: str,
+    jdbc_url: str,
+    db_properties: dict,
+):
+    print(
+        f"[ETL Job - Load] Writing to {target_table} ({mode} mode) via Spark Utils using provided JDBC config"
     )
-    print("[Load] Write completed")
+    load_to_jdbc(df, jdbc_url, target_table, mode, db_properties)
 
 
 def run_pipeline(**kwargs):
@@ -50,11 +38,35 @@ def run_pipeline(**kwargs):
     target_table = kwargs.get("target_table", "sales_transformed")
     write_mode = kwargs.get("write_mode", "overwrite")
 
-    spark = get_spark_session()
+    postgres_conn_id = kwargs.get("postgres_conn_id", "postgres_default")
+    jdbc_driver_class = "org.postgresql.Driver"
+
+    print(
+        f"[ETL Job - Run Pipeline] Using PostgresHook with conn_id: {postgres_conn_id}"
+    )
+    hook = PostgresHook(postgres_conn_id=postgres_conn_id)
+
+    airflow_conn = hook.get_connection(postgres_conn_id)
+
+    db_host = airflow_conn.host
+    db_port = airflow_conn.port
+    db_name = airflow_conn.schema
+    db_user = airflow_conn.login
+    db_password = airflow_conn.password
+
+    jdbc_url = f"jdbc:postgresql://{db_host}:{db_port}/{db_name}"
+    print(f"JDBC URL: {jdbc_url}")
+    db_properties = {
+        "user": db_user,
+        "password": db_password,
+        "driver": jdbc_driver_class,
+    }
+
+    spark = create_spark_session(app_name="PySpark ETL Job (Airflow Hook)")
     try:
-        raw_df = extract(spark, source_table)
+        raw_df = extract(spark, source_table, jdbc_url, db_properties)
         transformed_df = transform(raw_df)
-        load(transformed_df, target_table, mode=write_mode)
+        load(transformed_df, target_table, write_mode, jdbc_url, db_properties)
 
         print("\n[Preview] First 5 rows:")
         transformed_df.show(5)

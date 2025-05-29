@@ -1,26 +1,17 @@
-from pyspark.sql import SparkSession # type: ignore
-from pyspark.sql.functions import col # type: ignore
+from pyspark.sql.functions import col  # type: ignore
 from config.config import DB_CONFIG, ETL_CONFIG
-
-
-def get_spark_session(app_name="PowerBI ETL Job"):
-    return SparkSession.builder \
-        .appName(app_name) \
-        .config("spark.jars", DB_CONFIG["driver_path"]) \
-        .getOrCreate()
+from scripts.spark_utils import create_spark_session, extract_from_jdbc, load_to_jdbc
 
 
 def extract(spark, source_table):
-    print(f"[Extract] Reading from {source_table}")
-    df = spark.read \
-        .format("jdbc") \
-        .option("url", DB_CONFIG["jdbc_url"]) \
-        .option("dbtable", source_table) \
-        .option("user", DB_CONFIG["user"]) \
-        .option("password", DB_CONFIG["password"]) \
-        .option("driver", DB_CONFIG["driver"]) \
-        .load()
-    print(f"[Extract] Retrieved {df.count()} records")
+    print(f"[Requests ETL - Extract] Reading from {source_table} via Spark Utils")
+    jdbc_url = DB_CONFIG["jdbc_url"]
+    properties = {
+        "user": DB_CONFIG["user"],
+        "password": DB_CONFIG["password"],
+        "driver": DB_CONFIG["driver"],
+    }
+    df = extract_from_jdbc(spark, jdbc_url, source_table, properties)
     return df
 
 
@@ -30,17 +21,16 @@ def transform_contracts(df, columns):
 
 
 def load(df, target_table, mode="overwrite"):
-    print(f"[Load] Writing to {target_table} ({mode} mode)")
-    df.write \
-        .format("jdbc") \
-        .option("url", DB_CONFIG["jdbc_url"]) \
-        .option("dbtable", target_table) \
-        .option("user", DB_CONFIG["user"]) \
-        .option("password", DB_CONFIG["password"]) \
-        .option("driver", DB_CONFIG["driver"]) \
-        .mode(mode) \
-        .save()
-    print("[Load] Write completed")
+    print(
+        f"[Requests ETL - Load] Writing to {target_table} ({mode} mode) via Spark Utils"
+    )
+    jdbc_url = DB_CONFIG["jdbc_url"]
+    properties = {
+        "user": DB_CONFIG["user"],
+        "password": DB_CONFIG["password"],
+        "driver": DB_CONFIG["driver"],
+    }
+    load_to_jdbc(df, jdbc_url, target_table, mode, properties)
 
 
 def run_requests_pipeline(**kwargs):
@@ -51,7 +41,7 @@ def run_requests_pipeline(**kwargs):
     write_mode = kwargs.get("write_mode", pipeline_config["write_mode"])
     columns = pipeline_config["columns"]
 
-    spark = get_spark_session()
+    spark = create_spark_session(app_name="Requests ETL Job")
     try:
         raw_df = extract(spark, source_table)
         transformed_df = transform_contracts(raw_df, columns)
