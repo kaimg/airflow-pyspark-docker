@@ -82,7 +82,3 @@ def load_to_jdbc(
     df.write.jdbc(url=jdbc_url, table=dbtable, mode=mode, properties=properties)
     print("[Spark Utils] Successfully wrote data.")
 
-
-# It's good practice to also have an __init__.py in scripts if it's treated as a package,
-# which we created earlier. If spark_utils.py is intended to be part of the 'scripts' package,
-# no further action for __init__.py is needed here for this specific file.

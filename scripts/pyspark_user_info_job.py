@@ -63,22 +63,39 @@ def run_user_info_pipeline(**kwargs):
     pipeline_config = ETL_CONFIG.get(pipeline_name)
     target_table = kwargs.get("target_table", pipeline_config["target_table"])
     write_mode = kwargs.get("write_mode", pipeline_config["write_mode"])
-    postgres_conn_id = kwargs.get("postgres_conn_id", "postgres_test")
+    postgres_conn_id_source = kwargs.get("postgres_conn_id_source", "postgres_default")
+    postgres_conn_id_destination = kwargs.get("postgres_conn_id_destination", "postgres_test")
     sql_file_path = kwargs.get("sql_file_path", "dags/sql/contract_user_info.sql")
 
-    hook = PostgresHook(postgres_conn_id=postgres_conn_id)
-    airflow_conn = hook.get_connection(postgres_conn_id)
+    hook = PostgresHook(postgres_conn_id=postgres_conn_id_source)
+    airflow_conn = hook.get_connection(postgres_conn_id_source)
     db_host = airflow_conn.host
     db_port = airflow_conn.port
     db_name = airflow_conn.schema
     db_user = airflow_conn.login
     db_password = airflow_conn.password
 
+
+    hook_destination = PostgresHook(postgres_conn_id=postgres_conn_id_destination)
+    airflow_conn_destination = hook_destination.get_connection(postgres_conn_id_destination) 
+    db_host_destination = airflow_conn_destination.host
+    db_port_destination = airflow_conn_destination.port
+    db_name_destination = airflow_conn_destination.schema
+    db_user_destination = airflow_conn_destination.login
+    db_password_destination = airflow_conn_destination.password
+
     jdbc_url = f"jdbc:postgresql://{db_host}:{db_port}/{db_name}"
+    jdbc_url_destination = f"jdbc:postgresql://{db_host_destination}:{db_port_destination}/{db_name_destination}"
     print(f"JDBC URL: {jdbc_url}")
+    print(f"JDBC URL Destination: {jdbc_url_destination}")
     db_properties = {
         "user": db_user,
         "password": db_password,
+        "driver": DB_CONFIG["driver"],
+    }
+    db_properties_destination = {
+        "user": db_user_destination,
+        "password": db_password_destination,
         "driver": DB_CONFIG["driver"],
     }
 
@@ -86,7 +103,7 @@ def run_user_info_pipeline(**kwargs):
     try:
         extracted_dfs = extract_tables(spark, pipeline_name, jdbc_url, db_properties)
         transformed_df = transform_user_info_sql(spark, extracted_dfs, pipeline_name, jdbc_url, db_properties, sql_file_path)
-        load(transformed_df, target_table, mode=write_mode, jdbc_url=jdbc_url, db_properties=db_properties)
+        load(transformed_df, target_table, mode=write_mode, jdbc_url=jdbc_url_destination, db_properties=db_properties_destination)
 
         print("\n[Preview] First 5 rows of transformed data:")
         transformed_df.show(5)

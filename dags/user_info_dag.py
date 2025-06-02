@@ -25,7 +25,8 @@ with DAG(
         task_id="run_user_info_etl",
         python_callable=run_user_info_pipeline,
         op_kwargs={
-            "postgres_conn_id": "postgres_test",
+            "postgres_conn_id_destination": "postgres_test",
+            "postgres_conn_id_source": "postgres_default",
             "sql_file_path": "dags/sql/contract_user_info.sql",
         },
     )
