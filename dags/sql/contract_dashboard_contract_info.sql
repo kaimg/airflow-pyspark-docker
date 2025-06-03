@@ -1,0 +1,13 @@
+SELECT
+    id,
+    external_id,
+    description,
+    customer_id,
+    supplier_id,
+    cam_id,
+    procurement_contract_owner,
+    valid_from,
+    valid_to,
+    contract_approved_value
+FROM
+    contracts_contract;
