@@ -29,5 +29,10 @@ with DAG(
         task_id="say_hello",
         python_callable=say_hello,
     )
+    hello = SQLExecuteQueryOperator(
+        task_id='hello_sql',
+        conn_id='your_postgres_conn_id',
+        sql='/sql/benchmarking/benchmark_historical_data.sql', 
+    )
 
-    (start >> hello_task >> end)
+    (start >> hello >> end)
