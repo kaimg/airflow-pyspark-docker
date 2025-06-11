@@ -3,6 +3,7 @@ from airflow import DAG  # type: ignore
 from airflow.operators.python import PythonOperator  # type: ignore
 from airflow.operators.empty import EmptyOperator  # type: ignore
 from airflow.providers.http.operators.http import HttpOperator # type: ignore
+from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.sdk import Variable
 
 default_args = {
@@ -31,10 +32,11 @@ with DAG(
     start = EmptyOperator(task_id="start")
     end = EmptyOperator(task_id="end")
     API_KEY = Variable.get("API_KEY_CURRENCY_RATE")
+    ENDPOINT_URL = f"/latest?access_key={API_KEY}&base=EUR&symbols=USD,AUD,CAD,PLN,MXN,AZN,TRY"
     get_api_response = HttpOperator(
         task_id="get_api_response",
         http_conn_id="http_currency",
-        endpoint=f"/latest?access_key={API_KEY}&base=EUR",
+        endpoint= ENDPOINT_URL,
         method="GET",
         response_check=check_response,
         
@@ -43,5 +45,15 @@ with DAG(
         task_id="print_response",
         python_callable=show_response,
     )
+    write_response = SQLExecuteQueryOperator(
+        task_id='write_response',
+        conn_id='my_postgres_conn',
+        sql="""
+            {% for rate_currency, rate in ti.xcom_pull(task_ids='process_data', key='currency_data')['rates'].items() %}
+              INSERT INTO currency_rates (base_currency, rate_currency, rate, timestamp, date)
+              VALUES ('{{ ti.xcom_pull(task_ids='process_data', key='currency_data')['base'] }}', '{{ rate_currency }}', {{ rate }}, '{{ ti.xcom_pull(task_ids='process_data', key='currency_data')['timestamp'] }}', '{{ ti.xcom_pull(task_ids='process_data', key='currency_data')['date'] }}');
+            {% endfor %}
+        """, 
+    )
 
-    (start >> get_api_response >> print_response >> end)
+    (start >> get_api_response >> print_response >> write_response >> end)

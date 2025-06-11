@@ -1,11 +1,24 @@
-from config.config import DB_CONFIG, ETL_CONFIG
+from config.config import DB_CONFIG
 from scripts.spark_utils import create_spark_session, extract_from_jdbc, load_to_jdbc
 from airflow.providers.postgres.hooks.postgres import PostgresHook # type: ignore
+from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
+import pyspark.sql.functions as sf # type: ignore
+
+ETL_CONFIG = {
+    "user_info_pipeline": {
+        "source_tables": [
+            {"name": "currency_rates", "schema": "public", "alias": "currency_rates"}
+        ],
+        "target_table": "contract_dashboard_user_info",
+        "write_mode": "overwrite"
+    }
+}
 
 def extract_tables(spark, pipeline_name="user_info_pipeline", jdbc_url=None, db_properties=None):
     print(
         f"[User Info Job - Extract] Reading tables for pipeline '{pipeline_name}' via Spark Utils..."
     )
+    
     pipeline_config = ETL_CONFIG[pipeline_name]
     source_tables = pipeline_config.get("source_tables", [])
     extracted_dfs = {}
@@ -29,7 +42,6 @@ def extract_tables(spark, pipeline_name="user_info_pipeline", jdbc_url=None, db_
 
 def transform_user_info_sql(spark, extracted_dfs, pipeline_name="user_info_pipeline", jdbc_url=None, db_properties=None, sql_file_path=None):
     print("[Transform] Performing user info transformation using Spark SQL...")
-
     pipeline_config = ETL_CONFIG[pipeline_name]
     source_tables = pipeline_config.get("source_tables", [])
 
@@ -47,6 +59,7 @@ def transform_user_info_sql(spark, extracted_dfs, pipeline_name="user_info_pipel
 
     transformed_df = spark.sql(sql_query)
     print(f"[Transform] Transformed {transformed_df.count()} records.")
+    print(transformed_df)
     return transformed_df
 
 
@@ -55,16 +68,16 @@ def load(df, target_table, mode="overwrite", jdbc_url=None, db_properties=None):
         f"[User Info Job - Load] Writing to {target_table} ({mode} mode) via Spark Utils"
     )
     properties = db_properties
-    load_to_jdbc(df, jdbc_url, f"public.{target_table}", mode, properties)
+    load_to_jdbc(df, jdbc_url, f"{target_table}", mode, properties)
 
 
 def run_user_info_pipeline(**kwargs):
     pipeline_name = "user_info_pipeline"
     pipeline_config = ETL_CONFIG.get(pipeline_name)
     target_table = kwargs.get("target_table", pipeline_config["target_table"])
-    write_mode = kwargs.get("write_mode", pipeline_config["write_mode"])
-    postgres_conn_id_source = kwargs.get("postgres_conn_id_source", "postgres_default")
-    postgres_conn_id_destination = kwargs.get("postgres_conn_id_destination", "postgres_test")
+    #write_mode = kwargs.get("write_mode", pipeline_config["write_mode"])
+    postgres_conn_id_source = kwargs.get("postgres_conn_id_source", "postgres_conn_id_source")
+    postgres_conn_id_destination = kwargs.get("postgres_conn_id_destination", "postgres_conn_id_destination")
     sql_file_path = kwargs.get("sql_file_path", "dags/sql/contract_user_info.sql")
 
     hook = PostgresHook(postgres_conn_id=postgres_conn_id_source)
@@ -103,7 +116,7 @@ def run_user_info_pipeline(**kwargs):
     try:
         extracted_dfs = extract_tables(spark, pipeline_name, jdbc_url, db_properties)
         transformed_df = transform_user_info_sql(spark, extracted_dfs, pipeline_name, jdbc_url, db_properties, sql_file_path)
-        load(transformed_df, target_table, mode=write_mode, jdbc_url=jdbc_url_destination, db_properties=db_properties_destination)
+        load(transformed_df, target_table, jdbc_url=jdbc_url_destination, db_properties=db_properties_destination)
 
         print("\n[Preview] First 5 rows of transformed data:")
         transformed_df.show(5)

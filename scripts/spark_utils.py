@@ -60,6 +60,9 @@ def extract_from_jdbc(
     )
     df = spark.read.jdbc(url=jdbc_url, table=dbtable, properties=properties)
     print(f"[Spark Utils] Successfully read data. Record count: {df.count()}")
+    print(df)
+    spark.catalog.listTables()
+    print(spark.catalog.listTables())
     return df
 
 
@@ -81,4 +84,5 @@ def load_to_jdbc(
     )
     df.write.jdbc(url=jdbc_url, table=dbtable, mode=mode, properties=properties)
     print("[Spark Utils] Successfully wrote data.")
+    print(df)
 
