@@ -7,7 +7,10 @@ import pyspark.sql.functions as sf # type: ignore
 ETL_CONFIG = {
     "user_info_pipeline": {
         "source_tables": [
-            {"name": "currency_rates", "schema": "public", "alias": "currency_rates"}
+            {"name": "users_user", "schema": "public", "alias": "users_user"},
+            {"name": "roles_role", "schema": "public", "alias": "roles_role"},
+            {"name": "users_user_role", "schema": "public", "alias": "users_user_role"},
+            {"name": "companies_customercompany", "schema": "public", "alias": "companies_customercompany"}
         ],
         "target_table": "contract_dashboard_user_info",
         "write_mode": "overwrite"
@@ -78,7 +81,7 @@ def run_user_info_pipeline(**kwargs):
     #write_mode = kwargs.get("write_mode", pipeline_config["write_mode"])
     postgres_conn_id_source = kwargs.get("postgres_conn_id_source", "postgres_conn_id_source")
     postgres_conn_id_destination = kwargs.get("postgres_conn_id_destination", "postgres_conn_id_destination")
-    sql_file_path = kwargs.get("sql_file_path", "dags/sql/contract_user_info.sql")
+    sql_file_path = kwargs.get("sql_file_path", "dags/sql/contract_user/contract_user_info.sql")
 
     hook = PostgresHook(postgres_conn_id=postgres_conn_id_source)
     airflow_conn = hook.get_connection(postgres_conn_id_source)
