@@ -2,11 +2,7 @@ from datetime import datetime, timedelta
 from airflow import DAG  # type: ignore
 from airflow.operators.python import PythonOperator  # type: ignore
 from airflow.operators.empty import EmptyOperator  # type: ignore
-from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
-
-def say_hello():
-    print("Hello World!")
-
+from scripts.benchmarking.benchmarking_report_historical_data_job import run_benchmarking_material_pipeline
 
 default_args = {
     "owner": "airflow",
@@ -15,24 +11,26 @@ default_args = {
 }
 
 with DAG(
-    dag_id="hello_world",
+    dag_id="benchmarking_material_pipeline_dag",
     default_args=default_args,
-    description="Hello World DAG",
+    description="Run PySpark ETL job for user info dashboard",
     start_date=datetime(2025, 1, 1),
     catchup=False,
-    tags=["hello-worlds"],
+    tags=["pyspark", "benchmarking_material"],
 ) as dag:
     start = EmptyOperator(task_id="start")
     end = EmptyOperator(task_id="end")
 
-    hello_task = PythonOperator(
-        task_id="say_hello",
-        python_callable=say_hello,
-    )
-    hello = SQLExecuteQueryOperator(
-        task_id='hello_sql',
-        conn_id='your_postgres_conn_id',
-        sql='/sql/benchmarking/benchmark_report_material_benchmark_history.sql', 
+    run_spark_job = PythonOperator(
+        task_id="run_benchmarking_material_etl",
+        python_callable=run_benchmarking_material_pipeline,
+        op_kwargs={
+            "postgres_conn_id_destination": "postgres_conn_id_destination",
+            "postgres_conn_id_source": "postgres_conn_id_source",
+            "write_mode": "overwrite",
+            "target_table": "currency_rates",
+            "sql_file_path": "dags/sql/benchmarking/benchmark_report_material_benchmark_history.sql",
+        },
     )
 
-    (start >> hello >> end)
+    (start >> run_spark_job >> end)

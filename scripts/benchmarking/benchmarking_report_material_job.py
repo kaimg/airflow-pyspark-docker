@@ -1,20 +1,18 @@
 from config.config import DB_CONFIG
 from scripts.spark_utils import create_spark_session, extract_from_jdbc, load_to_jdbc
 from airflow.providers.postgres.hooks.postgres import PostgresHook # type: ignore
-from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
-import pyspark.sql.functions as sf # type: ignore
 
 ETL_CONFIG = {
-    "user_support_pipeline": {
+    "benchmarking_material_pipeline": {
         "source_tables": [
-            {"name": "requests", "schema": "public", "alias": "requests"}
+            {"name": "benchmark_report_historical_data", "schema": "public", "alias": "benchmark_report_historical_data"}
         ],
-        "target_table": "user_support_requests_request",
-        "write_mode": "append"
+        "target_table": "benchmark_report_historical_data",
+        "write_mode": "overwrite"
     }
 }
 
-def extract_tables(spark, pipeline_name="user_support_pipeline", jdbc_url=None, db_properties=None):
+def extract_tables(spark, pipeline_name="benchmarking_material_pipeline", jdbc_url=None, db_properties=None):
     print(
         f"[User Info Job - Extract] Reading tables for pipeline '{pipeline_name}' via Spark Utils..."
     )
@@ -40,7 +38,7 @@ def extract_tables(spark, pipeline_name="user_support_pipeline", jdbc_url=None, 
     return extracted_dfs
 
 
-def transform_user_support_sql(spark, extracted_dfs, pipeline_name="user_support_pipeline", jdbc_url=None, db_properties=None, sql_file_path=None):
+def transform_benchmarking_material_sql(spark, extracted_dfs, pipeline_name="benchmarking_material_pipeline", jdbc_url=None, db_properties=None, sql_file_path=None):
     print("[Transform] Performing user info transformation using Spark SQL...")
     pipeline_config = ETL_CONFIG[pipeline_name]
     source_tables = pipeline_config.get("source_tables", [])
@@ -63,7 +61,7 @@ def transform_user_support_sql(spark, extracted_dfs, pipeline_name="user_support
     return transformed_df
 
 
-def load(df, target_table, mode="append", jdbc_url=None, db_properties=None):
+def load(df, target_table, mode="overwrite", jdbc_url=None, db_properties=None):
     print(
         f"[User Info Job - Load] Writing to {target_table} ({mode} mode) via Spark Utils"
     )
@@ -71,14 +69,14 @@ def load(df, target_table, mode="append", jdbc_url=None, db_properties=None):
     load_to_jdbc(df, jdbc_url, f"{target_table}", mode, properties)
 
 
-def run_user_support_pipeline(**kwargs):
-    pipeline_name = "user_support_pipeline"
+def run_benchmarking_material_pipeline(**kwargs):
+    pipeline_name = "benchmarking_material_pipeline"
     pipeline_config = ETL_CONFIG.get(pipeline_name)
     target_table = kwargs.get("target_table", pipeline_config["target_table"])
     #write_mode = kwargs.get("write_mode", pipeline_config["write_mode"])
     postgres_conn_id_source = kwargs.get("postgres_conn_id_source", "postgres_conn_id_source")
     postgres_conn_id_destination = kwargs.get("postgres_conn_id_destination", "postgres_conn_id_destination")
-    sql_file_path = kwargs.get("sql_file_path", "dags/sql/user_support/user_support.sql")
+    sql_file_path = kwargs.get("sql_file_path", "dags/sql/benchmarking/benchmark_report_material_benchmark_history.sql")
 
     hook = PostgresHook(postgres_conn_id=postgres_conn_id_source)
     airflow_conn = hook.get_connection(postgres_conn_id_source)
@@ -112,10 +110,10 @@ def run_user_support_pipeline(**kwargs):
         "driver": DB_CONFIG["driver"],
     }
 
-    spark = create_spark_session(app_name="User Support Analytics Job")
+    spark = create_spark_session(app_name="Benchmarking Material Analytics Job")
     try:
         extracted_dfs = extract_tables(spark, pipeline_name, jdbc_url, db_properties)
-        transformed_df = transform_user_support_sql(spark, extracted_dfs, pipeline_name, jdbc_url, db_properties, sql_file_path)
+        transformed_df = transform_benchmarking_material_sql(spark, extracted_dfs, pipeline_name, jdbc_url, db_properties, sql_file_path)
         load(transformed_df, target_table, jdbc_url=jdbc_url_destination, db_properties=db_properties_destination)
 
         print("\n[Preview] First 5 rows of transformed data:")
