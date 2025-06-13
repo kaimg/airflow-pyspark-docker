@@ -13,10 +13,10 @@ default_args = {
 with DAG(
     dag_id="contract_dashboard_pricebook_and_pricebook_product_info_pipeline_dag",
     default_args=default_args,
-    description="Run PySpark ETL job for user info dashboard",
+    description="Run PySpark ETL job for contract_dashboard_pricebook_and_pricebook_product_info",
     start_date=datetime(2025, 1, 1),
     catchup=False,
-    tags=["pyspark", "contract_dashboard_pricebook_and_pricebook_product_info"],
+    tags=["pyspark", "contract", "contract_dashboard_pricebook_and_pricebook_product_info"],
 ) as dag:
     start = EmptyOperator(task_id="start")
     end = EmptyOperator(task_id="end")
@@ -28,7 +28,7 @@ with DAG(
             "postgres_conn_id_destination": "postgres_conn_id_destination",
             "postgres_conn_id_source": "postgres_conn_id_source",
             "write_mode": "overwrite",
-            "target_table": "currency_rates",
+            "target_table": "contract_dashboard_pricebook_and_pricebook_product_info",
             "sql_file_path": "dags/sql/contract/contract_dashboard_pricebook_and_pricebook_product_info.sql",
         },
     )
