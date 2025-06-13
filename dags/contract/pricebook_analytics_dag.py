@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from airflow import DAG  # type: ignore
 from airflow.operators.python import PythonOperator  # type: ignore
 from airflow.operators.empty import EmptyOperator  # type: ignore
-from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
+
 
 def say_hello():
     print("Hello World!")

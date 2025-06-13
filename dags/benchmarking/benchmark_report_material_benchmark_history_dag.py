@@ -2,7 +2,9 @@ from datetime import datetime, timedelta
 from airflow import DAG  # type: ignore
 from airflow.operators.python import PythonOperator  # type: ignore
 from airflow.operators.empty import EmptyOperator  # type: ignore
-from scripts.benchmarking.benchmarking_report_material_job import run_benchmarking_material_pipeline
+from scripts.benchmarking.benchmarking_report_material_job import (
+    run_benchmarking_material_pipeline,
+)
 
 default_args = {
     "owner": "airflow",

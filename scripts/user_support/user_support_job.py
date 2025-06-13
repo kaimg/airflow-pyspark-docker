@@ -1,8 +1,6 @@
 from config.config import DB_CONFIG
 from scripts.spark_utils import create_spark_session, extract_from_jdbc, load_to_jdbc
-from airflow.providers.postgres.hooks.postgres import PostgresHook # type: ignore
-from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
-import pyspark.sql.functions as sf # type: ignore
+from airflow.providers.postgres.hooks.postgres import PostgresHook  # type: ignore
 
 ETL_CONFIG = {
     "user_support_pipeline": {
@@ -10,16 +8,19 @@ ETL_CONFIG = {
             {"name": "requests", "schema": "public", "alias": "requests"}
         ],
         "target_table": "user_support_requests_request",
-        "write_mode": "append"
+        "write_mode": "append",
     }
 }
 
-def extract_tables(spark, pipeline_name="user_support_pipeline", jdbc_url=None, db_properties=None):
+
+def extract_tables(
+    spark, pipeline_name="user_support_pipeline", jdbc_url=None, db_properties=None
+):
     print(
         f"[User Info Job - Extract] Reading tables for pipeline '{pipeline_name}' via Spark Utils..."
     )
-    
-    pipeline_config = ETL_CONFIG[pipeline_name] 
+
+    pipeline_config = ETL_CONFIG[pipeline_name]
     source_tables = pipeline_config.get("source_tables", [])
     extracted_dfs = {}
 
@@ -40,7 +41,14 @@ def extract_tables(spark, pipeline_name="user_support_pipeline", jdbc_url=None, 
     return extracted_dfs
 
 
-def transform_user_support_sql(spark, extracted_dfs, pipeline_name="user_support_pipeline", jdbc_url=None, db_properties=None, sql_file_path=None):
+def transform_user_support_sql(
+    spark,
+    extracted_dfs,
+    pipeline_name="user_support_pipeline",
+    jdbc_url=None,
+    db_properties=None,
+    sql_file_path=None,
+):
     print("[Transform] Performing user info transformation using Spark SQL...")
     pipeline_config = ETL_CONFIG[pipeline_name]
     source_tables = pipeline_config.get("source_tables", [])
@@ -54,7 +62,7 @@ def transform_user_support_sql(spark, extracted_dfs, pipeline_name="user_support
         else:
             raise ValueError(f"[Error] DataFrame '{alias}' not found in extracted_dfs")
 
-    with open(sql_file_path, 'r') as file:
+    with open(sql_file_path, "r") as file:
         sql_query = file.read()
 
     transformed_df = spark.sql(sql_query)
@@ -75,10 +83,16 @@ def run_user_support_pipeline(**kwargs):
     pipeline_name = "user_support_pipeline"
     pipeline_config = ETL_CONFIG.get(pipeline_name)
     target_table = kwargs.get("target_table", pipeline_config["target_table"])
-    #write_mode = kwargs.get("write_mode", pipeline_config["write_mode"])
-    postgres_conn_id_source = kwargs.get("postgres_conn_id_source", "postgres_conn_id_source")
-    postgres_conn_id_destination = kwargs.get("postgres_conn_id_destination", "postgres_conn_id_destination")
-    sql_file_path = kwargs.get("sql_file_path", "dags/sql/user_support/user_support.sql")
+    # write_mode = kwargs.get("write_mode", pipeline_config["write_mode"])
+    postgres_conn_id_source = kwargs.get(
+        "postgres_conn_id_source", "postgres_conn_id_source"
+    )
+    postgres_conn_id_destination = kwargs.get(
+        "postgres_conn_id_destination", "postgres_conn_id_destination"
+    )
+    sql_file_path = kwargs.get(
+        "sql_file_path", "dags/sql/user_support/user_support.sql"
+    )
 
     hook = PostgresHook(postgres_conn_id=postgres_conn_id_source)
     airflow_conn = hook.get_connection(postgres_conn_id_source)
@@ -88,9 +102,10 @@ def run_user_support_pipeline(**kwargs):
     db_user = airflow_conn.login
     db_password = airflow_conn.password
 
-
     hook_destination = PostgresHook(postgres_conn_id=postgres_conn_id_destination)
-    airflow_conn_destination = hook_destination.get_connection(postgres_conn_id_destination) 
+    airflow_conn_destination = hook_destination.get_connection(
+        postgres_conn_id_destination
+    )
     db_host_destination = airflow_conn_destination.host
     db_port_destination = airflow_conn_destination.port
     db_name_destination = airflow_conn_destination.schema
@@ -115,8 +130,15 @@ def run_user_support_pipeline(**kwargs):
     spark = create_spark_session(app_name="User Support Analytics Job")
     try:
         extracted_dfs = extract_tables(spark, pipeline_name, jdbc_url, db_properties)
-        transformed_df = transform_user_support_sql(spark, extracted_dfs, pipeline_name, jdbc_url, db_properties, sql_file_path)
-        load(transformed_df, target_table, jdbc_url=jdbc_url_destination, db_properties=db_properties_destination)
+        transformed_df = transform_user_support_sql(
+            spark, extracted_dfs, pipeline_name, jdbc_url, db_properties, sql_file_path
+        )
+        load(
+            transformed_df,
+            target_table,
+            jdbc_url=jdbc_url_destination,
+            db_properties=db_properties_destination,
+        )
 
         print("\n[Preview] First 5 rows of transformed data:")
         transformed_df.show(5)

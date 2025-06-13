@@ -2,7 +2,9 @@ from datetime import datetime, timedelta
 from airflow import DAG  # type: ignore
 from airflow.operators.python import PythonOperator  # type: ignore
 from airflow.operators.empty import EmptyOperator  # type: ignore
-from scripts.contract.contract_dashboard_request_info_job import run_contract_dashboard_request_info_pipeline
+from scripts.contract.contract_dashboard_request_info_job import (
+    run_contract_dashboard_request_info_pipeline,
+)
 
 default_args = {
     "owner": "airflow",
@@ -16,7 +18,7 @@ with DAG(
     description="Run PySpark ETL job for contract_dashboard_request_info",
     start_date=datetime(2025, 1, 1),
     catchup=False,
-    tags=["pyspark", "contract","contract_dashboard_request_info"],
+    tags=["pyspark", "contract", "contract_dashboard_request_info"],
 ) as dag:
     start = EmptyOperator(task_id="start")
     end = EmptyOperator(task_id="end")

@@ -2,7 +2,9 @@ from datetime import datetime, timedelta
 from airflow import DAG  # type: ignore
 from airflow.operators.python import PythonOperator  # type: ignore
 from airflow.operators.empty import EmptyOperator  # type: ignore
-from scripts.contract.contract_dashboard_contract_info_job import run_contract_dashboard_contract_info_pipeline
+from scripts.contract.contract_dashboard_contract_info_job import (
+    run_contract_dashboard_contract_info_pipeline,
+)
 
 default_args = {
     "owner": "airflow",

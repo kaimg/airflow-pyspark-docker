@@ -1,4 +1,4 @@
-from pyspark.sql import SparkSession, DataFrame   # type: ignore
+from pyspark.sql import SparkSession, DataFrame  # type: ignore
 from config.config import DB_CONFIG  # To access driver_path
 
 
@@ -85,4 +85,3 @@ def load_to_jdbc(
     df.write.jdbc(url=jdbc_url, table=dbtable, mode=mode, properties=properties)
     print("[Spark Utils] Successfully wrote data.")
     print(df)
-

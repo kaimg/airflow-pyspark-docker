@@ -55,12 +55,13 @@ def transform_complex_analytics_spark_sql(
     # or you might use `TO_TIMESTAMP()` if 'updated_at' is a string.
     # We're using f-string for direct injection of last_updated_value.
     sql_file_path = "dags/sql/pricebook_analytics.sql"
-    with open(sql_file_path, 'r') as file:
+    with open(sql_file_path, "r") as file:
         sql_query = file.read()
-    
+
     transformed_df = spark.sql(sql_query)
     print(f"[Transform] Transformed {transformed_df.count()} records.")
     return transformed_df
+
 
 def load(df, target_table, mode="overwrite"):
     print(
