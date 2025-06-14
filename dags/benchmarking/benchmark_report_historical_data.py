@@ -18,7 +18,7 @@ with DAG(
     description="Run PySpark ETL job for user info dashboard",
     start_date=datetime(2025, 1, 1),
     catchup=False,
-    tags=["pyspark", "benchmarking_history"],
+    tags=["pyspark", "benchmarking", "benchmarking_history"],
 ) as dag:
     start = EmptyOperator(task_id="start")
     end = EmptyOperator(task_id="end")

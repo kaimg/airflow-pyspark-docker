@@ -2,7 +2,9 @@ from datetime import datetime, timedelta
 from airflow import DAG  # type: ignore
 from airflow.operators.python import PythonOperator  # type: ignore
 from airflow.operators.empty import EmptyOperator  # type: ignore
-from scripts.generic.currency_new_rate_job import run_currency_rates_pipeline
+from scripts.generic.currency_new_rate_job import (
+    run_currency_rates_pipeline
+)
 
 default_args = {
     "owner": "airflow",
