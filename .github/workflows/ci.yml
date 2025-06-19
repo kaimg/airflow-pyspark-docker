@@ -1,8 +1,38 @@
-name: ci
-on: push
+name: Deployment
+
+# Enable Buildkit and let compose use it to speed up image building
+env:
+  DOCKER_BUILDKIT: 1
+  COMPOSE_DOCKER_CLI_BUILD: 1
+
+on:
+  push:
+    branches:
+      - 'main'
+    paths-ignore:
+      - 'docs/**'
+
+concurrency: # Limit the number of concurrent jobs to 1, so that only one deployment can run at a time
+  group: ${{ github.head_ref || github.run_id }}
+
 jobs:
-  my-job:
-    runs-on: ubuntu-latest
+  deploy_to_dev:
+    name: Deploy to Development Environment
+    if: github.ref == 'refs/heads/main'
+    runs-on: [ self-hosted, beta_env ]
     steps:
-      - name: my-step
-        run: echo "Hello World!"
+      - name: Checkout Code Repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+        
+      - name: Set up env files for
+        if: ${{ vars.DEV_ENVS_DIR != '' }} 
+        run: |
+          mkdir -p ./.envs/.production/
+          cp -r ${{ vars.DEV_ENVS_DIR }}/contract_new/.production ./.envs/
+
+      - name: Build and Run the docker-compose stack
+        if: github.head_ref || github.ref_name == 'main'
+        shell: bash
+        run: cp -r 
