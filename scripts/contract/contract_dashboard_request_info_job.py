@@ -1,6 +1,5 @@
-from config.config import DB_CONFIG
 from scripts.spark_utils import create_spark_session, extract_from_jdbc, load_to_jdbc
-from airflow.providers.postgres.hooks.postgres import PostgresHook  # type: ignore
+from scripts.pg_db_utils import get_db_config, build_jdbc_and_properties
 
 ETL_CONFIG = {
     "contract_dashboard_request_info_pipeline": {
@@ -101,44 +100,17 @@ def run_contract_dashboard_request_info_pipeline(**kwargs):
         "sql_file_path", "dags/sql/contract/contract_dashboard_request_info.sql"
     )
 
-    hook = PostgresHook(postgres_conn_id=postgres_conn_id_source)
-    airflow_conn = hook.get_connection(postgres_conn_id_source)
-    db_host = airflow_conn.host
-    db_port = airflow_conn.port
-    db_name = airflow_conn.schema
-    db_user = airflow_conn.login
-    db_password = airflow_conn.password
+    db_source = get_db_config(postgres_conn_id_source)
+    db_destination = get_db_config(postgres_conn_id_destination)
 
-    hook_destination = PostgresHook(postgres_conn_id=postgres_conn_id_destination)
-    airflow_conn_destination = hook_destination.get_connection(
-        postgres_conn_id_destination
-    )
-    db_host_destination = airflow_conn_destination.host
-    db_port_destination = airflow_conn_destination.port
-    db_name_destination = airflow_conn_destination.schema
-    db_user_destination = airflow_conn_destination.login
-    db_password_destination = airflow_conn_destination.password
-
-    jdbc_url = f"jdbc:postgresql://{db_host}:{db_port}/{db_name}"
-    jdbc_url_destination = f"jdbc:postgresql://{db_host_destination}:{db_port_destination}/{db_name_destination}"
-    print(f"JDBC URL: {jdbc_url}")
-    print(f"JDBC URL Destination: {jdbc_url_destination}")
-    db_properties = {
-        "user": db_user,
-        "password": db_password,
-        "driver": DB_CONFIG["driver"],
-    }
-    db_properties_destination = {
-        "user": db_user_destination,
-        "password": db_password_destination,
-        "driver": DB_CONFIG["driver"],
-    }
+    jdbc_url_source, db_properties_source = build_jdbc_and_properties(db_source, "source")
+    jdbc_url_destination, db_properties_destination = build_jdbc_and_properties(db_destination, "destination")
 
     spark = create_spark_session(app_name="Benchmarking Material Analytics Job")
     try:
-        extracted_dfs = extract_tables(spark, pipeline_name, jdbc_url, db_properties)
+        extracted_dfs = extract_tables(spark, pipeline_name, jdbc_url_source, db_properties_source)
         transformed_df = transform_contract_dashboard_request_info_sql(
-            spark, extracted_dfs, pipeline_name, jdbc_url, db_properties, sql_file_path
+            spark, extracted_dfs, pipeline_name, jdbc_url_source, db_properties_source, sql_file_path
         )
         load(
             transformed_df,
