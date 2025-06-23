@@ -2,15 +2,10 @@ from datetime import datetime, timedelta
 from airflow import DAG  # type: ignore
 from airflow.operators.python import PythonOperator  # type: ignore
 from airflow.operators.empty import EmptyOperator  # type: ignore
+from dags.shared_default_args import default_args
 from scripts.contract.contract_dashboard_pricebook_and_pricebook_product_info_job import (
     run_contract_dashboard_pricebook_and_pricebook_product_info_pipeline,
 )
-
-default_args = {
-    "owner": "airflow",
-    "retries": 1,
-    "retry_delay": timedelta(minutes=5),
-}
 
 with DAG(
     dag_id="contract_dashboard_pricebook_and_pricebook_product_info_pipeline_dag",

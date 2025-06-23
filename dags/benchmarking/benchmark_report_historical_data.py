@@ -2,15 +2,11 @@ from datetime import datetime, timedelta
 from airflow import DAG  # type: ignore
 from airflow.operators.python import PythonOperator  # type: ignore
 from airflow.operators.empty import EmptyOperator  # type: ignore
+from dags.shared_default_args import default_args
 from scripts.benchmarking.benchmarking_report_historical_data_job import (
     run_benchmarking_history_pipeline,
 )
 
-default_args = {
-    "owner": "airflow",
-    "retries": 1,
-    "retry_delay": timedelta(minutes=5),
-}
 
 with DAG(
     dag_id="benchmarking_history_pipeline_dag",
