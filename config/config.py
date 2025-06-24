@@ -8,8 +8,8 @@ DB_CONFIG = {
     "jdbc_url": os.getenv("DB_JDBC_URL"),
     "user": os.getenv("DB_USER"),
     "password": os.getenv("DB_PASSWORD"),
-    "driver": os.getenv("DB_DRIVER"),
-    "driver_path": os.getenv("DB_DRIVER_PATH"),
+    "driver": os.getenv("DB_DRIVER", "org.postgresql.Driver"),
+    "driver_path": os.getenv("DB_DRIVER_PATH", "/opt/airflow/postgresql-42.2.5.jar"),
 }
 
 API_KEY_CURRENCY_RATE = os.getenv("API_KEY_CURRENCY_RATE")

@@ -1,7 +1,7 @@
 from config.config import DB_CONFIG
 from pathlib import Path
 from scripts.logger_utils import logger
-from airflow.hooks.postgres_hook import PostgresHook # type: ignore
+from airflow.providers.postgres.hooks.postgres import PostgresHook # type: ignore
 
 def get_db_config(conn_id):
     """
@@ -23,10 +23,14 @@ def build_jdbc_and_properties(db_config, db_config_name="source"):
     """
     jdbc_url = f"jdbc:postgresql://{db_config['host']}:{db_config['port']}/{db_config['schema']}"
     db_properties = {
-        "user": db_config["login"],
-        "password": db_config["password"],
-        "driver": DB_CONFIG["driver"],
+        "user": db_config.get("login"),
+        "password": db_config.get("password"),
+        "driver": DB_CONFIG.get("driver"),
     }
+
+    # Filter out keys where the value is None
+    db_properties = {k: v for k, v in db_properties.items() if v is not None}
+    
     logger.debug(f"JDBC URL ({db_config_name}): {jdbc_url}")
     return jdbc_url, db_properties
 
