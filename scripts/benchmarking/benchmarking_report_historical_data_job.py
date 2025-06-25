@@ -1,6 +1,6 @@
 from scripts.spark_utils import create_spark_session, extract_from_jdbc, load_to_jdbc
 from scripts.pg_db_utils import get_db_config, build_jdbc_and_properties, read_sql_file
-from scripts.logger import logger
+from scripts.logger_utils import logger
 
 ETL_CONFIG = {
     "benchmarking_history_pipeline": {
@@ -65,6 +65,7 @@ def transform_benchmarking_history_sql(
         if df is not None:
             df.createOrReplaceTempView(view_name)
         else:
+            logger.error(f"[Error] DataFrame '{alias}' not found in extracted_dfs")
             raise ValueError(f"[Error] DataFrame '{alias}' not found in extracted_dfs")
 
     sql_query = read_sql_file(sql_file_path)
